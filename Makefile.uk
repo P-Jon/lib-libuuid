@@ -60,13 +60,15 @@ LIBUUID_SRC=$(LIBUUID_ORIGIN)/$(LIBUUID_SUBDIR)
 # Put public headers (uuid.h) in a public folder and export them globally. The
 # prepare step below takes care of populating the folder.
 $(call mk_sub_build_dir,libuuid/include/public)
-CINCLUDES-$(CONFIG_LIBUUID) += -I$(LIBUUID_BUILD)/include/public
+CINCLUDES-$(CONFIG_LIBUUID) += -I$(LIBUUID_ORIGIN)/include/public
 
 # Put private headers (the glue's config.h, and uuid's non-uuid.h headers)
 # in a private folder and export that only locally to libuuid. The prepare
 # step below takes care of populating the folder
 $(call mk_sub_build_dir,libuuid/include/private)
-LIBUUID_CINCLUDES-y += -I$(LIBUUID_BUILD)/include/private
+LIBUUID_CINCLUDES-y += -I$(LIBUUID_ORIGIN)/include/private
+
+CINCLUDES-$(CONFIG_LIBUUID) += -I$(LIBUUID_BASE)/include
 
 ################################################################################
 # Global flags
@@ -95,34 +97,3 @@ LIBUUID_SRCS-y += $(LIBUUID_SRC)/pack.c
 LIBUUID_SRCS-y += $(LIBUUID_SRC)/randutils.c
 LIBUUID_SRCS-y += $(LIBUUID_SRC)/unpack.c
 LIBUUID_SRCS-y += $(LIBUUID_SRC)/uuid_time.c
-
-################################################################################
-# Lib-specific Targets
-################################################################################
-.PRECIOUS: $(LIBUUID_EXTRACTED)/%.h
-
-$(LIBUUID_BUILD)/include/public/%.h: $(LIBUUID_SRC)/%.h
-	$(call build_cmd,LN,libuuid,$@,\
-	ln -sf $< $@)
-
-$(LIBUUID_BUILD)/include/private/%.h: $(LIBUUID_SRC)/%.h
-	$(call build_cmd,LN,libuuid,$@,\
-	ln -sf $< $@)
-
-$(LIBUUID_BUILD)/include/private/config.h: $(LIBUUID_BASE)/include/config.h
-	$(call build_cmd,LN,libuuid,$@,\
-	ln -sf $< $(LIBUUID_BUILD)/include/private/config.h)
-
-$(LIBUUID_SRC)/%.h: $(LIBUUID_BUILD)/.origin
-	@: empty recipe to enforce dependency to archive extraction
-
-# public headers
-UK_PREPARE += $(LIBUUID_BUILD)/include/public/uuid.h
-
-# private headers
-UK_PREPARE += $(LIBUUID_BUILD)/include/private/all-io.h
-UK_PREPARE += $(LIBUUID_BUILD)/include/private/c.h
-UK_PREPARE += $(LIBUUID_BUILD)/include/private/randutils.h
-UK_PREPARE += $(LIBUUID_BUILD)/include/private/uuidd.h
-UK_PREPARE += $(LIBUUID_BUILD)/include/private/uuidP.h
-UK_PREPARE += $(LIBUUID_BUILD)/include/private/config.h
